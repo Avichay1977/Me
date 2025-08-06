@@ -1,12 +1,13 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import { NextRequest, NextResponse } from "next/server";
 
 const MODEL_NAME = "gemini-1.5-pro-latest";
 
-const SYSTEM_PROMPT = `You are a helpful and expert assistant for the music production software Cubase.
+const SYSTEM_PROMPT = `You are a helpful and expert assistant for the music production software Cubase. Your name is Cubase Copilot.
 
 Your tasks are:
-1.  If the user provides an image and asks a question about it, answer the question concisely.
+1.  If the user provides an image and asks a question about it, answer the question concisely and helpfully.
 2.  If the user provides a text prompt asking to create a script, translate the request into precise, executable JavaScript code that conforms to the Cubase Scripting API.
     - When generating a script, your output must ONLY contain the JavaScript code. Do not add any explanations or any other text outside the code block.
     - If you cannot fulfill a script request, return a short error message inside a JavaScript comment.
@@ -21,18 +22,12 @@ Example for a visual question:
 User: (Image of a Cubase mixer) "What does the red 'R' button do?"
 Assistant: "The red 'R' button is the 'Read' button for automation. When it's enabled, the track will read and follow any existing automation data."`;
 
-async function fileToGenerativePart(file: string, mimeType: string) {
-  return {
-    inlineData: {
-      data: file,
-      mimeType,
-    },
-  };
-}
+// --- Google Cloud Clients ---
+const ttsClient = new TextToSpeechClient();
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, image } = await req.json();
+    const { prompt, imageBase64 } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required." }, { status: 400 });
@@ -43,6 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Google API key is not set." }, { status: 500 });
     }
 
+    // --- Text Generation ---
     const genAI = new GoogleGenerativeAI(API_KEY);
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
@@ -60,20 +56,19 @@ export async function POST(req: NextRequest) {
       { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
     ];
 
-    const parts = [
-        { text: SYSTEM_PROMPT },
-        { text: `User query: ${prompt}` },
-    ];
+    const parts: any[] = [{ text: SYSTEM_PROMPT }, { text: `User query: ${prompt}` }];
 
-    if (image) {
-        const image_data_url = image.split(',')[1];
-        const mime_type = image.match(/data:(.*);base64,/)[1];
+    if (imageBase64) {
+      const image_data = imageBase64.split(',')[1];
+      const mime_type = imageBase64.match(/data:(.*);base64,/)?.[1];
+      if (mime_type && image_data) {
         parts.push({
             inline_data: {
                 mime_type: mime_type,
-                data: image_data_url
+                data: image_data
             }
         });
+      }
     }
 
     const result = await model.generateContent({
@@ -83,14 +78,32 @@ export async function POST(req: NextRequest) {
     });
 
     const text = result.response.text();
-
-    // Simple check if the response is likely code
     const isCode = text.includes('cubase.') || text.trim().startsWith('//');
 
-    return NextResponse.json({ text, isCode });
+    // --- Text-to-Speech Generation ---
+    // We don't generate speech for code blocks to avoid reading out code.
+    if (isCode) {
+        return NextResponse.json({ text, isCode, audioBuffer: null });
+    }
+
+    const ttsRequest = {
+      input: { text: text },
+      voice: { languageCode: 'en-US', ssmlGender: 'NEUTRAL' as const },
+      audioConfig: { audioEncoding: 'MP3' as const },
+    };
+
+    const [ttsResponse] = await ttsClient.synthesizeSpeech(ttsRequest);
+
+    if (!ttsResponse.audioContent) {
+        return NextResponse.json({ text, isCode, audioBuffer: null });
+    }
+
+    const audioBuffer = Buffer.from(ttsResponse.audioContent).toJSON();
+
+    return NextResponse.json({ text, isCode, audioBuffer });
 
   } catch (error: any) {
-    console.error("Error in generate API:", error);
+    console.error("Error in /api/chat:", error);
     return NextResponse.json({ error: error.message || "An unexpected error occurred." }, { status: 500 });
   }
 }

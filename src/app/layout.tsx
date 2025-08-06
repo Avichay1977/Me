@@ -6,8 +6,8 @@ import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cubase Copilot",
-  description: "Your AI assistant for Cubase.",
+  title: "Pro Audio Assistant",
+  description: "Your advanced AI assistant for Cubase.",
 };
 
 export default function RootLayout({
@@ -17,9 +17,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-dark-bg`}>
         {children}
-        <Toaster position="bottom-center" />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: '#333',
+              color: '#fff',
+            },
+          }}
+        />
       </body>
     </html>
   );

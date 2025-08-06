@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.chat-bubble {
+    @apply max-w-lg p-3 rounded-lg;
+}
+
+.chat-bubble.user {
+    @apply bg-blue-600 text-white;
+}
+
+.chat-bubble.ai {
+    @apply bg-gray-700 text-white;
+}
