@@ -16,104 +16,161 @@
         }
         h1 {
             text-align: center;
-            color: #005f87; /* A color inspired by Cubase */
+            color: #005f87;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        #examples-dropdown {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
         }
         textarea {
             width: 100%;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
-            min-height: 100px;
+            min-height: 120px;
             margin-bottom: 1rem;
             box-sizing: border-box;
         }
-        button {
+        #submit-button {
             display: block;
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
-        button:hover {
+        #submit-button:hover {
             background-color: #0056b3;
         }
-        button:disabled {
+        #submit-button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
         #result-container {
             margin-top: 2rem;
+            position: relative;
         }
-        h2 {
-            color: #333;
+        #copy-button {
+            position: absolute;
+            top: 10px;
+            left: 10px; /* Adjusted for LTR content in an RTL page */
+            padding: 5px 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #result-container:hover #copy-button {
+            opacity: 1;
         }
         pre {
-            background-color: #282c34; /* Dark theme for code */
+            background-color: #282c34;
             color: #abb2bf;
-            padding: 1rem;
+            padding: 1.5rem;
+            padding-top: 2.5rem; /* Make space for the copy button */
             border-radius: 5px;
             white-space: pre-wrap;
             word-wrap: break-word;
-            text-align: left; /* Align code to the left */
-            direction: ltr; /* Ensure code block is LTR */
+            text-align: left;
+            direction: ltr;
         }
-        .error {
+        .error-message {
             color: #d9534f;
-            border: 1px solid #d9534f;
             background-color: #f2dede;
-            padding: 1rem;
-            border-radius: 5px;
+            border: 1px solid #d9534f;
         }
     </style>
 </head>
 <body>
 
     <h1>Cubase Script Assistant</h1>
-    <p>הזן בקשה בשפה טבעית (עברית או אנגלית) כדי ליצור סקריפט לקיובייס.</p>
+    <p>הזן בקשה בשפה טבעית או בחר דוגמה כדי ליצור סקריפט לקיובייס.</p>
+
+    <div class="controls">
+        <label for="examples-dropdown">דוגמאות:</label>
+        <select id="examples-dropdown">
+            <option value="">בחר דוגמה...</option>
+            <option value="צור 4 ערוצי אודיו סטריאו חדשים">צור 4 ערוצי אודיו סטריאו</option>
+            <option value="צור ערוץ Group חדש בשם 'Drums'">צור ערוץ Group בשם 'Drums'</option>
+            <option value="צבע את כל ערוצי ה-MIDI בכחול">צבע את כל ערוצי ה-MIDI בכחול</option>
+            <option value="הוסף אפקט Reverb לכל הערוצים הנבחרים">הוסף Reverb לערוצים נבחרים</option>
+        </select>
+    </div>
 
     <form id="prompt-form">
-        <textarea id="prompt-input" placeholder="לדוגמה: צור 4 ערוצי אודיו סטריאו חדשים" required></textarea>
+        <textarea id="prompt-input" placeholder="לדוגמה: מחק את כל הערוצים הריקים" required></textarea>
         <button id="submit-button" type="submit">צור סקריפט</button>
     </form>
 
     <div id="result-container">
+        <button id="copy-button">העתק</button>
         <h2>תוצאה:</h2>
-        <div id="result">
-            <pre><code id="code-output">...הסקריפט שייוצר יופיע כאן</code></pre>
-        </div>
+        <pre><code id="code-output">...הסקריפט שייוצר יופיע כאן</code></pre>
     </div>
 
     <script>
         const form = document.getElementById('prompt-form');
         const input = document.getElementById('prompt-input');
         const submitButton = document.getElementById('submit-button');
-        const resultDiv = document.getElementById('result');
         const codeOutput = document.getElementById('code-output');
+        const copyButton = document.getElementById('copy-button');
+        const examplesDropdown = document.getElementById('examples-dropdown');
 
+        // --- Event Listener for Examples Dropdown ---
+        examplesDropdown.addEventListener('change', (e) => {
+            if (e.target.value) {
+                input.value = e.target.value;
+                input.focus();
+            }
+        });
+
+        // --- Event Listener for Copy Button ---
+        copyButton.addEventListener('click', () => {
+            const codeToCopy = codeOutput.textContent;
+            if (codeToCopy && !codeOutput.parentElement.classList.contains('error-message')) {
+                navigator.clipboard.writeText(codeToCopy).then(() => {
+                    copyButton.textContent = 'הועתק!';
+                    setTimeout(() => {
+                        copyButton.textContent = 'העתק';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    copyButton.textContent = 'שגיאה';
+                });
+            }
+        });
+
+        // --- Event Listener for Form Submission ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = input.value.trim();
             if (!prompt) return;
 
-            // Disable button and show loading state
             submitButton.disabled = true;
             submitButton.textContent = 'מעבד...';
-            resultDiv.classList.remove('error');
-            // Clear previous output and show loading message
-            codeOutput.parentElement.style.display = 'block';
+            codeOutput.parentElement.classList.remove('error-message');
             codeOutput.textContent = '...טוען';
-
 
             try {
                 const response = await fetch('/generate', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt }),
                 });
 
@@ -122,14 +179,14 @@
                 if (response.ok) {
                     codeOutput.textContent = data.code || '// The model returned an empty script.';
                 } else {
-                    // Use the pre block for errors too for consistency
+                    codeOutput.parentElement.classList.add('error-message');
                     codeOutput.textContent = `שגיאה: ${data.error || 'An unknown error occurred.'}`;
                 }
 
             } catch (err) {
+                codeOutput.parentElement.classList.add('error-message');
                 codeOutput.textContent = `שגיאת רשת: ${err.message}`;
             } finally {
-                // Re-enable button
                 submitButton.disabled = false;
                 submitButton.textContent = 'צור סקריפט';
             }
