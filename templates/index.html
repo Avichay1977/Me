@@ -68,6 +68,82 @@
             padding: 1rem;
             border-radius: 5px;
         }
+
+        /* Voice Control Styles */
+        .input-container {
+            position: relative;
+        }
+
+        #prompt-input {
+           padding-left: 55px; /* Space for the voice button */
+        }
+
+        #voice-btn {
+            /* This is a button, but we make it look like an icon */
+            all: unset; /* Reset all button styles */
+            position: absolute;
+            left: 8px;
+            /* Center vertically inside the textarea */
+            top: 0;
+            bottom: 0;
+            margin: auto 0;
+            height: 40px; /* Explicit height */
+
+            width: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #voice-btn:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+
+        #voice-btn.listening {
+            color: #fff;
+            background-color: #dc3545;
+            border-color: #c82333;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 12px rgba(220, 53, 69, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
+        #voice-status {
+            text-align: center;
+            margin-top: 1rem;
+            padding: 0.75rem 1.25rem;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 5px;
+            color: #856404;
+            display: none; /* Hidden by default */
+        }
+        #voice-status p {
+            margin: 0.25rem 0;
+        }
+        #interim-transcript {
+            font-style: italic;
+            color: #6c757d;
+            min-height: 24px; /* Avoid layout shift */
+        }
     </style>
 </head>
 <body>
@@ -76,9 +152,17 @@
     <p>הזן בקשה בשפה טבעית (עברית או אנגלית) כדי ליצור סקריפט לקיובייס.</p>
 
     <form id="prompt-form">
-        <textarea id="prompt-input" placeholder="לדוגמה: צור 4 ערוצי אודיו סטריאו חדשים" required></textarea>
+        <div class="input-container">
+            <textarea id="prompt-input" placeholder="לדוגמה: צור 4 ערוצי אודיו סטריאו חדשים" required></textarea>
+            <button type="button" id="voice-btn" title="הפעל זיהוי קולי">🎤</button>
+        </div>
         <button id="submit-button" type="submit">צור סקריפט</button>
     </form>
+
+    <div id="voice-status">
+        <p>מאזין...</p>
+        <p id="interim-transcript">&nbsp;</p>
+    </div>
 
     <div id="result-container">
         <h2>תוצאה:</h2>
@@ -93,6 +177,9 @@
         const submitButton = document.getElementById('submit-button');
         const resultDiv = document.getElementById('result');
         const codeOutput = document.getElementById('code-output');
+        const voiceBtn = document.getElementById('voice-btn');
+        const voiceStatus = document.getElementById('voice-status');
+        const interimTranscriptEl = document.getElementById('interim-transcript');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -134,6 +221,98 @@
                 submitButton.textContent = 'צור סקריפט';
             }
         });
+
+        // --- Voice Recognition Logic ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'he-IL';
+            recognition.interimResults = true;
+
+            voiceBtn.addEventListener('click', () => {
+                if (isListening) {
+                    recognition.stop();
+                    return;
+                }
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.error("Error starting recognition:", e);
+                    alert("Could not start voice recognition. It might be already active or an error occurred.");
+                }
+            });
+
+            recognition.onstart = () => {
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.title = 'הפסק זיהוי קולי';
+                voiceStatus.style.display = 'block';
+                interimTranscriptEl.innerHTML = '&nbsp;'; // Clear previous transcript
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                voiceBtn.classList.remove('listening');
+                voiceBtn.title = 'הפעל זיהוי קולי';
+                voiceStatus.style.display = 'none';
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error, event.message);
+                // Provide more user-friendly error messages
+                let errorMessage = `An unknown error occurred: ${event.error}`;
+                if (event.error === 'no-speech') {
+                    errorMessage = 'לא זוהה דיבור. אנא נסה שוב.';
+                } else if (event.error === 'not-allowed') {
+                    errorMessage = 'הגישה למיקרופון נדחתה. אנא אפשר גישה בהגדרות הדפדפן.';
+                } else if (event.error === 'network') {
+                    errorMessage = 'אירעה שגיאת רשת. אנא בדוק את חיבור האינטרנט שלך.';
+                }
+                alert(errorMessage);
+            };
+
+            recognition.onresult = (event) => {
+                let final_transcript = '';
+                let interim_transcript = '';
+
+                // Loop through the results from the speech recognition event
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        final_transcript += transcript;
+                    } else {
+                        interim_transcript += transcript;
+                    }
+                }
+
+                // Update the visual feedback with the interim transcript
+                interimTranscriptEl.textContent = interim_transcript;
+
+                // If we have a final, confirmed transcript, process it
+                if (final_transcript) {
+                    // Log the command for debugging
+                    console.log(`Voice command received: "${final_transcript.trim()}"`);
+
+                    // Populate the textarea with the command
+                    input.value = final_transcript.trim();
+
+                    // Stop the recognition service. The `onend` event will handle the UI cleanup.
+                    recognition.stop();
+
+                    // Programmatically click the submit button to trigger the script generation
+                    submitButton.click();
+                }
+            };
+
+        } else {
+            // Hide the button if the browser doesn't support the API
+            voiceBtn.style.display = 'none';
+            console.warn('Speech Recognition API is not supported in this browser.');
+        }
     </script>
 
 </body>
