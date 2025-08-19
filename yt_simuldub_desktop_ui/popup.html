@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>SimulDub – שליטה</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 12px; width: 320px; }
+      h1 { font-size: 16px; margin: 0 0 8px; }
+      .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+      label { min-width: 120px; }
+      button { padding: 6px 10px; }
+      select, input[type="range"] { flex: 1; }
+      small { color: #666; }
+      .ok { color: #2e7d32; }
+      .off { color: #b71c1c; }
+    </style>
+  </head>
+  <body>
+    <h1>YT SimulDub (דמו)</h1>
+
+    <div class="row">
+      <button id="toggle">Start</button>
+      <span id="state" class="off">כבוי</span>
+    </div>
+
+    <div class="row">
+      <label for="duck">הנמכת מקור</label>
+      <input id="duck" type="range" min="0" max="1" step="0.05" value="0.25"/>
+    </div>
+
+    <div class="row">
+      <label for="voice">קול עברית</label>
+      <select id="voice"></select>
+    </div>
+
+    <hr/>
+    <small>זהו דמו מקומי. דיבור עברית באמצעות SpeechSynthesis של הדפדפן. אין תרגום/ASR.</small>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
