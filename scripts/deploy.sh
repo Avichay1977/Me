@@ -17,7 +17,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 ENV="${ENV:-production}"
 SERVICE="${SERVICE:-cubase-script-assistant}"
 VERSION="${VERSION:-$(git describe --tags --always 2>/dev/null || echo 'unknown')}"
-DEPLOYMENT_ID="${DEPLOYMENT_ID:-$(date +%Y%m%d%H%M%S)-$(head -c 4 /dev/urandom | xxd -p)}"
+DEPLOYMENT_ID="${DEPLOYMENT_ID:-$(date +%Y%m%d%H%M%S)-$(printf '%04x' $RANDOM)}"
 
 # Metrics configuration
 METRICS_DIR="${METRICS_DIR:-$PROJECT_ROOT/metrics}"
