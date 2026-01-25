@@ -1,0 +1,42 @@
+# Environment
+.env
+*.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv/
+
+# Logs
+logs/
+*.log
+deployment_metrics.jsonl
+
+# Docker
+.docker/
+
+# Monitoring data (local)
+monitoring/
+prometheus_data/
+grafana_data/
+loki_data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports
+*.report.json

@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # Main Flask Application
+  cubase-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cubase-script-assistant
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./deployment_metrics.jsonl:/app/deployment_metrics.jsonl
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - triad-network
+    labels:
+      - "triad.service=app"
+      - "triad.metrics.enabled=true"
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: triad-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - triad-network
+    labels:
+      - "triad.service=monitoring"
+
+  # Grafana - Visualization
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: triad-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=triad_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    restart: unless-stopped
+    networks:
+      - triad-network
+    depends_on:
+      - prometheus
+    labels:
+      - "triad.service=visualization"
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: triad-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - triad-network
+    labels:
+      - "triad.service=logging"
+
+  # Promtail - Log Shipping
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: triad-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/app:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    networks:
+      - triad-network
+    depends_on:
+      - loki
+    labels:
+      - "triad.service=log-shipping"
+
+networks:
+  triad-network:
+    driver: bridge
+    name: triad-network
+
+volumes:
+  prometheus_data:
+    name: triad-prometheus-data
+  grafana_data:
+    name: triad-grafana-data
+  loki_data:
+    name: triad-loki-data
