@@ -1,0 +1,1003 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Production-grade deployment metrics dashboard with anomaly detection, MTTR tracking, and alerting",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 95 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/success_rate?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.success_rate"
+        }
+      ],
+      "title": "Success Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/mttr?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.count"
+        }
+      ],
+      "title": "Rollback Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "unit": "m"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/mttr?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.mttr_minutes"
+        }
+      ],
+      "title": "MTTR (Mean Time To Rollback)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/latency?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.avg"
+        }
+      ],
+      "title": "Avg Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/deployment_frequency?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.total"
+        }
+      ],
+      "title": "Total Deployments",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 1
+      },
+      "id": 6,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/deployment_frequency?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.per_day_avg"
+        }
+      ],
+      "title": "Deployments/Day",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 101,
+      "panels": [],
+      "title": "Alerts & Status",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "color-background"
+          },
+          "mappings": [
+            { "options": { "critical": { "color": "red", "index": 0, "text": "CRITICAL" } }, "type": "value" },
+            { "options": { "high": { "color": "orange", "index": 1, "text": "HIGH" } }, "type": "value" },
+            { "options": { "medium": { "color": "yellow", "index": 2, "text": "MEDIUM" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [{ "id": "custom.width", "value": 100 }]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 7,
+      "options": {
+        "footer": { "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "severity" }]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/alerts/evaluate?days=7",
+          "method": "GET",
+          "jsonPath": "$.alerts[*]",
+          "columns": [
+            { "selector": "severity", "text": "Severity", "type": "string" },
+            { "selector": "alert", "text": "Alert", "type": "string" },
+            { "selector": "message", "text": "Message", "type": "string" },
+            { "selector": "value", "text": "Value", "type": "number" },
+            { "selector": "threshold", "text": "Threshold", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Active Alerts",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "color-background"
+          },
+          "mappings": [
+            { "options": { "high": { "color": "red", "index": 0, "text": "HIGH" } }, "type": "value" },
+            { "options": { "medium": { "color": "yellow", "index": 1, "text": "MEDIUM" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 8,
+      "options": {
+        "footer": { "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/anomalies?days=${timerange_days}&std_threshold=2.0",
+          "method": "GET",
+          "jsonPath": "$.anomalies[*]",
+          "columns": [
+            { "selector": "deployment_id", "text": "Deployment ID", "type": "string" },
+            { "selector": "timestamp", "text": "Timestamp", "type": "time" },
+            { "selector": "latency", "text": "Latency (s)", "type": "number" },
+            { "selector": "z_score", "text": "Z-Score", "type": "number" },
+            { "selector": "severity", "text": "Severity", "type": "string" }
+          ]
+        }
+      ],
+      "title": "Anomaly Detection",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 102,
+      "panels": [],
+      "title": "Trends & Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Success Rate %",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "id": 9,
+      "options": {
+        "legend": { "calcs": ["mean", "min", "max"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/trends?metric=success_rate&days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.trend[*]",
+          "columns": [
+            { "selector": "period", "text": "Period", "type": "string" },
+            { "selector": "success_rate", "text": "Success Rate", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Success Rate Trend",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Latency (s)",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "id": 10,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/latency?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$",
+          "columns": [
+            { "selector": "avg", "text": "Average", "type": "number" },
+            { "selector": "p50", "text": "P50", "type": "number" },
+            { "selector": "p95", "text": "P95", "type": "number" },
+            { "selector": "p99", "text": "P99", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Latency Distribution",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 103,
+      "panels": [],
+      "title": "Version Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 95 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "success_rate" },
+            "properties": [
+              { "id": "custom.displayMode", "value": "gradient-gauge" },
+              { "id": "max", "value": 100 },
+              { "id": "min", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "id": 11,
+      "options": {
+        "footer": { "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "success_rate" }]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/versions?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.versions[*]",
+          "columns": [
+            { "selector": "version", "text": "Version", "type": "string" },
+            { "selector": "total", "text": "Total Deployments", "type": "number" },
+            { "selector": "successful", "text": "Successful", "type": "number" },
+            { "selector": "success_rate", "text": "Success Rate %", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Success Rate by Version",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 12,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "right", "showLegend": true },
+        "pieType": "pie",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/deployment_frequency?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.by_weekday",
+          "columns": [
+            { "selector": "Monday", "text": "Monday", "type": "number" },
+            { "selector": "Tuesday", "text": "Tuesday", "type": "number" },
+            { "selector": "Wednesday", "text": "Wednesday", "type": "number" },
+            { "selector": "Thursday", "text": "Thursday", "type": "number" },
+            { "selector": "Friday", "text": "Friday", "type": "number" },
+            { "selector": "Saturday", "text": "Saturday", "type": "number" },
+            { "selector": "Sunday", "text": "Sunday", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Deployments by Day of Week",
+      "type": "piechart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 30
+      },
+      "id": 104,
+      "panels": [],
+      "title": "Recent Deployments",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [
+            { "options": { "DEPLOYMENT_OK": { "color": "green", "index": 0, "text": "SUCCESS" } }, "type": "value" },
+            { "options": { "ROLLBACK_REQUIRED": { "color": "red", "index": 1, "text": "ROLLBACK" } }, "type": "value" },
+            { "options": { "success": { "color": "green", "index": 2, "text": "SUCCESS" } }, "type": "value" },
+            { "options": { "rolled_back": { "color": "red", "index": 3, "text": "ROLLED BACK" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "decision" },
+            "properties": [{ "id": "custom.displayMode", "value": "color-background" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "status" },
+            "properties": [{ "id": "custom.displayMode", "value": "color-background" }]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 13,
+      "options": {
+        "footer": { "fields": "", "reducer": ["sum"], "show": false },
+        "showHeader": true,
+        "sortBy": [{ "desc": true, "displayName": "timestamp" }]
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/recent?days=${timerange_days}&limit=20",
+          "method": "GET",
+          "jsonPath": "$.deployments[*]",
+          "columns": [
+            { "selector": "deployment_id", "text": "Deployment ID", "type": "string" },
+            { "selector": "timestamp", "text": "Timestamp", "type": "time" },
+            { "selector": "version", "text": "Version", "type": "string" },
+            { "selector": "env", "text": "Environment", "type": "string" },
+            { "selector": "triggered_by", "text": "Triggered By", "type": "string" },
+            { "selector": "user", "text": "User", "type": "string" },
+            { "selector": "decision", "text": "Decision", "type": "string" },
+            { "selector": "status", "text": "Status", "type": "string" },
+            { "selector": "latency", "text": "Latency (s)", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Recent Deployments",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "id": 105,
+      "panels": [],
+      "title": "MTTR Analysis",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "json-api",
+        "uid": "deployment-metrics-api"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Duration (min)",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineWidth": 1,
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "line" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 15 }
+            ]
+          },
+          "unit": "m"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 14,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "groupWidth": 0.7,
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "refId": "A",
+          "url": "${METRICS_API}/api/mttr?days=${timerange_days}",
+          "method": "GET",
+          "jsonPath": "$.rollbacks[*]",
+          "columns": [
+            { "selector": "deployment_id", "text": "Deployment", "type": "string" },
+            { "selector": "duration_minutes", "text": "Duration (min)", "type": "number" }
+          ]
+        }
+      ],
+      "title": "Rollback Duration by Deployment",
+      "type": "barchart"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["deployment", "metrics", "sre", "observability"],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "http://localhost:8080",
+          "value": "http://localhost:8080"
+        },
+        "hide": 0,
+        "label": "Metrics API URL",
+        "name": "METRICS_API",
+        "options": [
+          {
+            "selected": true,
+            "text": "http://localhost:8080",
+            "value": "http://localhost:8080"
+          }
+        ],
+        "query": "http://localhost:8080",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "30",
+          "value": "30"
+        },
+        "hide": 0,
+        "label": "Time Range (days)",
+        "name": "timerange_days",
+        "options": [
+          { "selected": false, "text": "7", "value": "7" },
+          { "selected": false, "text": "14", "value": "14" },
+          { "selected": true, "text": "30", "value": "30" },
+          { "selected": false, "text": "60", "value": "60" },
+          { "selected": false, "text": "90", "value": "90" }
+        ],
+        "query": "7,14,30,60,90",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30d",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Deployment Metrics Dashboard",
+  "uid": "deployment-metrics",
+  "version": 1,
+  "weekStart": ""
+}

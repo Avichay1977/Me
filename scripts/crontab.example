@@ -1,0 +1,58 @@
+# =============================================================================
+# Deployment Metrics Monitoring - Crontab Configuration
+# =============================================================================
+#
+# Copy these entries to your crontab with: crontab -e
+#
+# Required environment variables (set in ~/.profile or similar):
+#   METRICS_API_URL     - URL of the metrics API (default: http://localhost:8080)
+#   SLACK_WEBHOOK_URL   - Slack incoming webhook URL
+#   TEAMS_WEBHOOK_URL   - Microsoft Teams webhook URL (optional)
+#   PAGERDUTY_ROUTING_KEY - PagerDuty routing key (optional)
+#
+# =============================================================================
+
+# Set PATH and environment variables
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+METRICS_API_URL=http://localhost:8080
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+# TEAMS_WEBHOOK_URL=https://outlook.office.com/webhook/YOUR/WEBHOOK/URL
+# PAGERDUTY_ROUTING_KEY=your-routing-key
+
+# =============================================================================
+# Health Monitoring
+# =============================================================================
+
+# Check deployment health every hour
+0 * * * * /path/to/scripts/deployment_health_monitor.py >> /var/log/deployment_health.log 2>&1
+
+# More aggressive monitoring during business hours (every 15 min, 8am-6pm Mon-Fri)
+# */15 8-18 * * 1-5 /path/to/scripts/deployment_health_monitor.py >> /var/log/deployment_health.log 2>&1
+
+# =============================================================================
+# Daily Reports
+# =============================================================================
+
+# Send daily deployment digest at 9am (Monday-Friday)
+0 9 * * 1-5 /path/to/scripts/daily_deployment_digest.py >> /var/log/deployment_digest.log 2>&1
+
+# Weekly summary on Monday at 9am (last 7 days)
+# 0 9 * * 1 DIGEST_DAYS=7 /path/to/scripts/daily_deployment_digest.py >> /var/log/deployment_digest.log 2>&1
+
+# =============================================================================
+# API Server Management
+# =============================================================================
+
+# Ensure metrics API server is running (check every 5 minutes)
+# */5 * * * * pgrep -f "analyze_deployment_metrics.py.*--server" || /path/to/scripts/analyze_deployment_metrics.py /path/to/metrics/deployment_metrics.jsonl --server --port 8080 &
+
+# =============================================================================
+# Maintenance
+# =============================================================================
+
+# Rotate metrics logs monthly (keep last 12 months)
+# 0 0 1 * * find /path/to/metrics -name "*.jsonl" -mtime +365 -delete
+
+# Archive old metrics quarterly
+# 0 0 1 */3 * tar -czf /path/to/archive/metrics_$(date +\%Y\%m).tar.gz /path/to/metrics/*.jsonl
