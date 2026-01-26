@@ -4,6 +4,31 @@ This application is a web-based tool that uses the Google Gemini AI model to tra
 
 ---
 
+## Features / תכונות
+
+### 🔄 Retry Logic
+The application automatically retries failed API requests with exponential backoff (1s, 2s, 4s) to handle temporary network issues.
+
+### 💾 Response Caching
+Identical requests are cached for 60 minutes to improve response time and reduce API usage.
+
+### 🚦 Rate Limiting
+Protected against API quota exhaustion with a limit of 10 requests per minute per user.
+
+### ✅ Enhanced Input Validation
+- Prevents empty requests
+- Limits prompt length to 1000 characters
+- Validates request format
+
+### 📝 Improved Error Messages
+User-friendly Hebrew error messages for common issues:
+- Invalid API key
+- Quota exceeded
+- Network errors
+- Timeout errors
+
+---
+
 ## הסבר על הקוד (Hebrew Code Explanation)
 
 תיאור כללי של הקוד
@@ -63,7 +88,27 @@ This application is a web-based tool that uses the Google Gemini AI model to tra
         5.  **החזרת תשובה**: שולחת בחזרה לדפדפן של המשתמש את הקוד הנקי בפורמט JSON.
         6.  **טיפול בשגיאות**: אם מתרחשת תקלה, השרת יחזיר הודעת שגיאה מסודרת.
 
-#### 6. בלוק הרצה ראשי
+#### 6. מנגנוני הגנה ואופטימיזציה
+
+**Rate Limiting (הגבלת קצב):**
+- `check_rate_limit()`: מונע שימוש יתר ב-API על ידי הגבלה של 10 בקשות לדקה למשתמש.
+- שומר רשימה של timestamps ומוחק כניסות ישנות מעל דקה.
+
+**Response Cache (מטמון תשובות):**
+- `get_cached_response()`: בודק אם יש תשובה שמורה בזיכרון עבור אותה בקשה.
+- `cache_response()`: שומר תשובות למשך 60 דקות כדי להפחית שימוש ב-API ולשפר מהירות.
+- התשובות נשמרות עם normalization (הקטנת אותיות) כדי להתאים גם בקשות דומות.
+
+**Retry Logic (ניסיון חוזר):**
+- `generate_with_retry()`: מנסה לשלוח בקשה ל-API עד 3 פעמים במקרה של כשל.
+- משתמש ב-exponential backoff: ממתין שנייה אחת, אז 2, אז 4 לפני כל ניסיון.
+- עוזר להתמודד עם שגיאות רשת זמניות.
+
+**Input Validation (אימות קלט):**
+- בדיקה שהבקשה לא ריקה ולא ארוכה מדי (מקסימום 1000 תווים).
+- החזרת הודעות שגיאה מפורטות בעברית עבור כל סוג בעיה.
+
+#### 7. בלוק הרצה ראשי
 
 - `if __name__ == '__main__'`: קטע קוד סטנדרטי בפייתון שדואג שהפקודות שבתוכו ירוצו רק כאשר מריצים את הקובץ ישירות.
 - `app.run(debug=True, port=5001)`: מפעיל את שרת הפיתוח של Flask.

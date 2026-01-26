@@ -1,4 +1,7 @@
 import os
+import time
+from functools import lru_cache
+from datetime import datetime, timedelta
 import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
@@ -87,6 +90,62 @@ def get_model():
         logging.error(f"Failed to initialize the model: {e}")
         return None
 
+# --- Rate Limiting ---
+request_timestamps = []
+MAX_REQUESTS_PER_MINUTE = 10
+
+def check_rate_limit():
+    """Check if request is within rate limit."""
+    global request_timestamps
+    now = datetime.now()
+    # Remove timestamps older than 1 minute
+    request_timestamps = [ts for ts in request_timestamps if now - ts < timedelta(minutes=1)]
+
+    if len(request_timestamps) >= MAX_REQUESTS_PER_MINUTE:
+        return False, f"חרגת ממכסת הבקשות. אפשר לשלוח עד {MAX_REQUESTS_PER_MINUTE} בקשות לדקה."
+
+    request_timestamps.append(now)
+    return True, None
+
+# --- Response Cache ---
+response_cache = {}
+CACHE_EXPIRY_MINUTES = 60
+
+def get_cached_response(prompt):
+    """Get cached response if available and not expired."""
+    if prompt in response_cache:
+        cached_data, timestamp = response_cache[prompt]
+        if datetime.now() - timestamp < timedelta(minutes=CACHE_EXPIRY_MINUTES):
+            logging.info(f"Cache hit for prompt: {prompt[:50]}...")
+            return cached_data
+        else:
+            # Remove expired cache entry
+            del response_cache[prompt]
+    return None
+
+def cache_response(prompt, code):
+    """Cache the response."""
+    response_cache[prompt] = (code, datetime.now())
+    logging.info(f"Cached response for prompt: {prompt[:50]}...")
+
+# --- Retry Logic with Exponential Backoff ---
+def generate_with_retry(model, prompt, max_retries=3):
+    """Generate content with retry logic and exponential backoff."""
+    for attempt in range(max_retries):
+        try:
+            response = model.generate_content([prompt])
+            return response
+        except Exception as e:
+            wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
+            logging.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s...")
+
+            if attempt < max_retries - 1:
+                time.sleep(wait_time)
+            else:
+                # Last attempt failed
+                logging.error(f"All {max_retries} attempts failed for prompt generation.")
+                raise
+
 # --- Flask Routes ---
 @app.route('/')
 def index():
@@ -96,21 +155,40 @@ def index():
 @app.route('/generate', methods=['POST'])
 def generate_script():
     """Handles the script generation request."""
+    # Check rate limit
+    allowed, error_msg = check_rate_limit()
+    if not allowed:
+        return jsonify({'error': error_msg}), 429
+
     model = get_model()
     if model is None:
-        return jsonify({'error': 'API key not configured or model initialization failed.'}), 500
+        return jsonify({'error': 'מפתח ה-API לא מוגדר או אתחול המודל נכשל. אנא בדוק את הגדרות ה-API.'}), 500
 
     if not request.json or 'prompt' not in request.json:
-        return jsonify({'error': 'Invalid request. "prompt" is required.'}), 400
+        return jsonify({'error': 'בקשה לא תקינה. שדה "prompt" נדרש.'}), 400
 
     user_prompt = request.json['prompt']
-    if not user_prompt.strip():
-        return jsonify({'error': 'Prompt cannot be empty.'}), 400
+
+    # Enhanced input validation
+    if not user_prompt or not user_prompt.strip():
+        return jsonify({'error': 'הבקשה לא יכולה להיות רקה. אנא הזן טקסט.'}), 400
+
+    if len(user_prompt) > 1000:
+        return jsonify({'error': 'הבקשה ארוכה מדי. אנא הגביל את הטקסט ל-1000 תווים.'}), 400
+
+    # Normalize prompt for caching
+    normalized_prompt = user_prompt.strip().lower()
+
+    # Check cache
+    cached_code = get_cached_response(normalized_prompt)
+    if cached_code:
+        return jsonify({'code': cached_code, 'cached': True})
 
     try:
         logging.info(f"Received prompt: {user_prompt}")
 
-        response = model.generate_content([user_prompt])
+        # Use retry logic
+        response = generate_with_retry(model, user_prompt, max_retries=3)
 
         raw_text = response.text
         logging.info(f"Raw response from model: {raw_text}")
@@ -122,13 +200,30 @@ def generate_script():
         if code.endswith("```"):
             code = code[:-len("```")].strip()
 
-        return jsonify({'code': code})
+        # Validate that we got some code
+        if not code:
+            return jsonify({'error': 'המודל החזיר תשובה ריקה. אנא נסה שוב עם בקשה שונה.'}), 500
+
+        # Cache the response
+        cache_response(normalized_prompt, code)
+
+        return jsonify({'code': code, 'cached': False})
 
     except Exception as e:
         logging.error(f"Error during script generation: {e}")
-        if "API key not valid" in str(e):
-             return jsonify({'error': 'The configured Google API key is invalid.'}), 500
-        return jsonify({'error': f'An unexpected error occurred on the server.'}), 500
+        error_str = str(e)
+
+        # Enhanced error messages
+        if "API key not valid" in error_str or "invalid" in error_str.lower():
+            return jsonify({'error': 'מפתח ה-API של Google אינו תקין. אנא בדוק את ההגדרות.'}), 500
+        elif "quota" in error_str.lower() or "limit" in error_str.lower():
+            return jsonify({'error': 'חרגת ממכסת ה-API. אנא נסה שוב מאוחר יותר.'}), 429
+        elif "timeout" in error_str.lower():
+            return jsonify({'error': 'הבקשה לקחה יותר מדי זמן. אנא נסה שוב.'}), 504
+        elif "network" in error_str.lower() or "connection" in error_str.lower():
+            return jsonify({'error': 'שגיאת רשת. אנא בדוק את החיבור לאינטרנט ונסה שוב.'}), 503
+        else:
+            return jsonify({'error': 'אירעה שגיאה בלתי צפויה בשרת. אנא נסה שוב מאוחר יותר.'}), 500
 
 if __name__ == '__main__':
     # Port 5001 is used to avoid potential conflicts with other services.
