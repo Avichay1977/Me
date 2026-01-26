@@ -111,9 +111,10 @@ User-friendly Hebrew error messages for common issues:
 #### 7. בלוק הרצה ראשי
 
 - `if __name__ == '__main__'`: קטע קוד סטנדרטי בפייתון שדואג שהפקודות שבתוכו ירוצו רק כאשר מריצים את הקובץ ישירות.
-- `app.run(debug=True, port=5001)`: מפעיל את שרת הפיתוח של Flask.
+- `app.run(debug=True, host='0.0.0.0', port=8080)`: מפעיל את שרת הפיתוח של Flask.
     - `debug=True`: מצב פיתוח המציג שגיאות מפורטות ומטעין את השרת מחדש אוטומטית בכל שינוי בקוד.
-    - `port=5001`: מריץ את השרת על פורט 5001.
+    - `host='0.0.0.0'`: מאפשר גישה לשרת מכל כתובת IP (לא רק localhost).
+    - `port=8080`: מריץ את השרת על פורט 8080.
 
 ---
 
@@ -144,10 +145,10 @@ In the same terminal, run the following command:
 python app.py
 ```
 You will see output indicating that the server is running, something like:
-`* Running on http://127.0.0.1:5001`
+`* Running on http://127.0.0.1:8080`
 
 ### 4. Use the Assistant
 Open your web browser and go to the following address:
-[http://127.0.0.1:5001](http://127.0.0.1:5001)
+[http://127.0.0.1:8080](http://127.0.0.1:8080)
 
 You should see the web interface. You can now enter your requests in the text box to generate Cubase scripts.

@@ -226,5 +226,5 @@ def generate_script():
             return jsonify({'error': 'אירעה שגיאה בלתי צפויה בשרת. אנא נסה שוב מאוחר יותר.'}), 500
 
 if __name__ == '__main__':
-    # Port 5001 is used to avoid potential conflicts with other services.
-    app.run(debug=True, port=5001)
+    # Port 8080 is used to avoid potential conflicts with other services.
+    app.run(debug=True, host='0.0.0.0', port=8080)
