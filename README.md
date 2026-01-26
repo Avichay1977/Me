@@ -6,6 +6,13 @@ This application is a web-based tool that uses the Google Gemini AI model to tra
 
 ## Features / תכונות
 
+### 🎤 Voice Assistant (NEW!)
+**Full voice control with Hebrew language support:**
+- **Speech-to-Text**: Click the microphone button and speak your request in Hebrew
+- **Text-to-Speech**: Listen to the generated code being read aloud
+- **Visual Feedback**: Real-time indication when the system is listening
+- **Hands-free operation**: Perfect for when you're working in Cubase
+
 ### 🔄 Retry Logic
 The application automatically retries failed API requests with exponential backoff (1s, 2s, 4s) to handle temporary network issues.
 
@@ -152,3 +159,29 @@ Open your web browser and go to the following address:
 [http://127.0.0.1:8080](http://127.0.0.1:8080)
 
 You should see the web interface. You can now enter your requests in the text box to generate Cubase scripts.
+
+---
+
+## 🎤 Using Voice Control / שימוש בבקרת קול
+
+### Hebrew Voice Commands / פקודות קוליות בעברית
+
+1. **Click the microphone button** (🎤 לחץ לדיבור)
+2. **Allow microphone access** when prompted by your browser
+3. **Speak your request in Hebrew**, for example:
+   - "צור חמישה ערוצי אודיו חדשים"
+   - "הוסף אפקט קומפרסור לכל הערוצים"
+   - "מחק את כל הערוצים הריקים"
+4. **The text will appear** automatically in the text box
+5. **Click "צור סקריפט"** or just press the microphone again to speak another command
+6. **Click "🔊 הקרא"** to hear the generated code read aloud
+
+### Browser Compatibility / תאימות דפדפנים
+
+Voice features work best in:
+- ✅ Google Chrome
+- ✅ Microsoft Edge
+- ✅ Safari (macOS/iOS)
+- ❌ Firefox (limited support)
+
+**Note:** Make sure to allow microphone access when prompted!

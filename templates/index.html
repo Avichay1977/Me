@@ -95,12 +95,81 @@
             background-color: #f2dede;
             border: 1px solid #d9534f;
         }
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        #voice-button {
+            padding: 12px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        #voice-button:hover {
+            background-color: #218838;
+        }
+        #voice-button.recording {
+            background-color: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        #voice-status {
+            padding: 12px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            flex-grow: 1;
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+        }
+        #voice-status.listening {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+        #submit-button {
+            flex-grow: 1;
+        }
+        #speak-button {
+            padding: 12px 20px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        #speak-button:hover {
+            background-color: #138496;
+        }
+        #speak-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Cubase Script Assistant</h1>
-    <p>הזן בקשה בשפה טבעית או בחר דוגמה כדי ליצור סקריפט לקיובייס.</p>
+    <h1>🎤 Cubase Script Assistant - קולי</h1>
+    <p>הזן בקשה בשפה טבעית, דבר למיקרופון, או בחר דוגמה כדי ליצור סקריפט לקיובייס.</p>
+
+    <div class="voice-controls">
+        <button id="voice-button" type="button">🎤 לחץ לדיבור</button>
+        <div id="voice-status">לחץ על המיקרופון כדי להתחיל...</div>
+    </div>
 
     <div class="controls">
         <label for="examples-dropdown">דוגמאות:</label>
@@ -115,7 +184,10 @@
 
     <form id="prompt-form">
         <textarea id="prompt-input" placeholder="לדוגמה: מחק את כל הערוצים הריקים" required></textarea>
-        <button id="submit-button" type="submit">צור סקריפט</button>
+        <div class="button-row">
+            <button id="submit-button" type="submit">צור סקריפט</button>
+            <button id="speak-button" type="button">🔊 הקרא</button>
+        </div>
     </form>
 
     <div id="result-container">
@@ -131,6 +203,113 @@
         const codeOutput = document.getElementById('code-output');
         const copyButton = document.getElementById('copy-button');
         const examplesDropdown = document.getElementById('examples-dropdown');
+        const voiceButton = document.getElementById('voice-button');
+        const voiceStatus = document.getElementById('voice-status');
+        const speakButton = document.getElementById('speak-button');
+
+        // --- Voice Recognition Setup ---
+        let recognition = null;
+        let isListening = false;
+
+        // Check if browser supports Speech Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.lang = 'he-IL'; // Hebrew language
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isListening = true;
+                voiceButton.classList.add('recording');
+                voiceButton.textContent = '🎤 מקשיב...';
+                voiceStatus.classList.add('listening');
+                voiceStatus.textContent = 'מקשיב לך עכשיו... דבר בבקשה!';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                input.value = transcript;
+                voiceStatus.textContent = `שמעתי: "${transcript}"`;
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                voiceStatus.textContent = `שגיאה: ${event.error === 'no-speech' ? 'לא שמעתי כלום' : 'בעיה בזיהוי קולי'}`;
+                stopListening();
+            };
+
+            recognition.onend = () => {
+                stopListening();
+                if (input.value.trim()) {
+                    voiceStatus.textContent = 'מעולה! לחץ "צור סקריפט" או דבר שוב';
+                } else {
+                    voiceStatus.textContent = 'לחץ על המיקרופון כדי להתחיל...';
+                }
+            };
+        } else {
+            voiceButton.disabled = true;
+            voiceButton.textContent = '❌ הדפדפן לא תומך';
+            voiceStatus.textContent = 'נסה Chrome או Edge';
+        }
+
+        function stopListening() {
+            isListening = false;
+            voiceButton.classList.remove('recording');
+            voiceButton.textContent = '🎤 לחץ לדיבור';
+            voiceStatus.classList.remove('listening');
+        }
+
+        // --- Voice Button Click ---
+        voiceButton.addEventListener('click', () => {
+            if (!recognition) return;
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+
+        // --- Text-to-Speech Setup ---
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'he-IL';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+
+                speakButton.disabled = true;
+                speakButton.textContent = '🔊 מדבר...';
+
+                utterance.onend = () => {
+                    speakButton.disabled = false;
+                    speakButton.textContent = '🔊 הקרא';
+                };
+
+                utterance.onerror = () => {
+                    speakButton.disabled = false;
+                    speakButton.textContent = '🔊 הקרא';
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- Speak Button Click ---
+        speakButton.addEventListener('click', () => {
+            const code = codeOutput.textContent;
+            if (code && !codeOutput.parentElement.classList.contains('error-message')) {
+                speak('הקוד מוכן. ' + code);
+            } else if (codeOutput.parentElement.classList.contains('error-message')) {
+                speak('יש שגיאה. ' + code);
+            }
+        });
 
         // --- Event Listener for Examples Dropdown ---
         examplesDropdown.addEventListener('change', (e) => {
