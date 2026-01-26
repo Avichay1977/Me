@@ -235,3 +235,89 @@ At the top of the interface, you'll see a purple panel showing:
 ### Privacy / פרטיות
 
 All learning data is stored **locally** in a SQLite database (`user_learning.db`) on your machine. Nothing is sent to external servers except the prompts to Google Gemini for code generation.
+
+---
+
+## 🖥️ Windows Desktop Application / אפליקציית Windows
+
+### Features / תכונות
+
+**Advanced desktop app with full Windows integration:**
+
+✨ **Always-On-Top Window** - Small window that stays above all other windows
+⌨️ **Global Hotkeys** - Press `Ctrl+Shift+C` from anywhere to show/hide
+📍 **System Tray Icon** - Minimizes to system tray, not taskbar
+🖱️ **Draggable Window** - Click and drag the header to reposition
+👁️ **Screen Monitoring** - Watches Cubase and provides context-aware suggestions
+🔗 **Backend Integration** - Connects to Flask server for AI processing
+📋 **Quick Actions** - Copy to clipboard, execute in Cubase
+💎 **Semi-Transparent** - Elegant 95% opacity when not focused
+
+### Running the Desktop App / הפעלת האפליקציה
+
+#### Method 1: Python Script
+
+1. **Install desktop dependencies:**
+```bash
+pip install keyboard pystray Pillow pytesseract
+```
+
+2. **Run the Flask server** (in one terminal):
+```bash
+python app.py
+```
+
+3. **Run the desktop app** (in another terminal):
+```bash
+python desktop_app_advanced.py
+```
+
+#### Method 2: Standalone EXE (Windows Only)
+
+1. **Build the executable:**
+```bash
+python build_exe.py
+```
+
+2. **Choose option 1** (Advanced with all features)
+
+3. **Find the EXE** in `dist/CubaseAssistant.exe`
+
+4. **Run it!** Double-click the EXE
+
+**Note:** The Flask server (`app.py`) must still be running for the desktop app to work!
+
+### Desktop App Usage / שימוש
+
+1. **Launch the app** - It appears in the top-right corner
+2. **Type or speak** your request
+3. **Click "צור סקריפט"** to generate code
+4. **Copy or execute** the generated script
+5. **Use `Ctrl+Shift+C`** to show/hide from anywhere
+6. **Minimize to tray** - Click the minimize button
+
+### Screen Monitoring / מעקב מסך
+
+When enabled, the app:
+- 📸 Captures your screen every 5 seconds
+- 🔍 Uses OCR to read text from Cubase
+- 🧠 Understands context and workflow
+- 💡 Provides intelligent suggestions
+
+**Example:**
+- Sees you opened a "Hip Hop" project → suggests drum template
+- Detects empty tracks → offers to clean them up
+- Notices recording pattern → prepares vocal effects chain
+
+### Keyboard Shortcuts / קיצורי מקלדת
+
+- `Ctrl+Shift+C` - Show/Hide window (works globally)
+- `Enter` - Generate script (when in input field)
+- `Ctrl+C` - Copy output to clipboard
+
+### System Requirements / דרישות מערכת
+
+- **OS**: Windows 10/11 (64-bit)
+- **RAM**: 2GB minimum, 4GB recommended
+- **Python**: 3.8+ (if running from source)
+- **Internet**: Required for Google Gemini API
