@@ -6,6 +6,20 @@ This application is a web-based tool that uses the Google Gemini AI model to tra
 
 ## Features / תכונות
 
+### 🧠 AI Learning System (NEW!)
+**Adaptive machine learning that learns from your workflow:**
+- **Pattern Recognition**: Automatically identifies your common actions and preferences
+- **Smart Suggestions**: Provides intelligent recommendations based on your history
+- **Usage Analytics**: Real-time statistics showing your workflow patterns
+- **Personalized Experience**: The more you use it, the smarter it gets!
+- **Background Learning**: Learns silently without interrupting your work
+
+**What it learns:**
+- Your most frequent actions (create, add, delete, etc.)
+- Common numbers you use (e.g., "always creates 4 channels")
+- Similar previous requests for quick recall
+- Cache efficiency and usage patterns
+
 ### 🎤 Voice Assistant (NEW!)
 **Full voice control with Hebrew language support:**
 - **Speech-to-Text**: Click the microphone button and speak your request in Hebrew
@@ -185,3 +199,39 @@ Voice features work best in:
 - ❌ Firefox (limited support)
 
 **Note:** Make sure to allow microphone access when prompted!
+
+---
+
+## 🧠 AI Learning System / מערכת למידה חכמה
+
+### How It Works / איך זה עובד
+
+The learning system runs silently in the background and:
+1. **Saves every request** you make along with the generated code
+2. **Analyzes patterns** after every few requests
+3. **Identifies common actions** like "צור", "הוסף", "מחק"
+4. **Recognizes your preferences** such as favorite numbers, common workflows
+5. **Provides smart suggestions** in real-time
+
+### The Learning Panel / פאנל הלמידה
+
+At the top of the interface, you'll see a purple panel showing:
+- **Total Requests**: How many times you've used the system
+- **Today**: Number of requests today
+- **Cache Rate**: Percentage of requests served from cache
+- **Smart Suggestions**: AI-powered recommendations based on your patterns
+
+### Example Learning Scenarios / דוגמאות למידה
+
+1. **Frequent Actions**:
+   - After you create channels 10 times, it notices and says: "שמתי לב שאתה משתמש הרבה ב'צור'"
+
+2. **Common Numbers**:
+   - If you always create 4 channels, it suggests: "בדרך כלל אתה עובד עם 4 ערוצים"
+
+3. **Similar Requests**:
+   - When typing, it finds similar previous requests for quick access
+
+### Privacy / פרטיות
+
+All learning data is stored **locally** in a SQLite database (`user_learning.db`) on your machine. Nothing is sent to external servers except the prompts to Google Gemini for code generation.

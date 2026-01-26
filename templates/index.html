@@ -159,12 +159,101 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        .learning-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .learning-panel h3 {
+            margin: 0 0 1rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.2);
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .suggestions-container {
+            background: rgba(255,255,255,0.15);
+            border-radius: 5px;
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .suggestion-item {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .suggestion-item:hover {
+            background: rgba(255,255,255,1);
+            transform: translateX(-5px);
+        }
+        .suggestion-icon {
+            font-size: 1.5rem;
+        }
+        .confidence-badge {
+            margin-right: auto;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
 
-    <h1>🎤 Cubase Script Assistant - קולי</h1>
+    <h1>🎤 Cubase Script Assistant - קולי + AI</h1>
     <p>הזן בקשה בשפה טבעית, דבר למיקרופון, או בחר דוגמה כדי ליצור סקריפט לקיובייס.</p>
+
+    <div class="learning-panel" id="learning-panel">
+        <h3>🧠 מערכת למידה אוטומטית</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="stat-total">0</div>
+                <div class="stat-label">סה"כ בקשות</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="stat-today">0</div>
+                <div class="stat-label">היום</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="stat-cache">0%</div>
+                <div class="stat-label">מטמון</div>
+            </div>
+        </div>
+        <div class="suggestions-container" id="suggestions-container">
+            <p style="opacity: 0.8; font-size: 0.9rem;">💡 ההמלצות החכמות יופיעו כאן...</p>
+        </div>
+    </div>
 
     <div class="voice-controls">
         <button id="voice-button" type="button">🎤 לחץ לדיבור</button>
@@ -311,6 +400,77 @@
             }
         });
 
+        // --- Learning System Functions ---
+        async function loadStats() {
+            try {
+                const response = await fetch('/stats');
+                const stats = await response.json();
+
+                document.getElementById('stat-total').textContent = stats.total_requests || 0;
+                document.getElementById('stat-today').textContent = stats.requests_today || 0;
+                document.getElementById('stat-cache').textContent = (stats.cache_hit_rate || 0) + '%';
+            } catch (err) {
+                console.error('Failed to load stats:', err);
+            }
+        }
+
+        async function loadSuggestions(prompt = '') {
+            try {
+                const response = await fetch(`/suggestions?prompt=${encodeURIComponent(prompt)}`);
+                const data = await response.json();
+
+                const container = document.getElementById('suggestions-container');
+
+                if (data.suggestions && data.suggestions.length > 0) {
+                    container.innerHTML = data.suggestions.map(sug => `
+                        <div class="suggestion-item" onclick="applySuggestion('${sug.data}', '${sug.type}')">
+                            <span class="suggestion-icon">${getSuggestionIcon(sug.type)}</span>
+                            <span>${sug.text}</span>
+                            <span class="confidence-badge">${Math.round(sug.confidence * 100)}%</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="opacity: 0.8; font-size: 0.9rem;">💡 המערכת לומדת את ההרגלים שלך...</p>';
+                }
+            } catch (err) {
+                console.error('Failed to load suggestions:', err);
+            }
+        }
+
+        function getSuggestionIcon(type) {
+            const icons = {
+                'frequent_action': '🔁',
+                'frequent_number': '🔢',
+                'recent_similar': '📋',
+                'stats': '📊'
+            };
+            return icons[type] || '💡';
+        }
+
+        function applySuggestion(data, type) {
+            if (type === 'recent_similar') {
+                input.value = data;
+                input.focus();
+            } else {
+                // For other types, just show the data
+                speak('הצעה: ' + data);
+            }
+        }
+
+        // Load stats and suggestions on page load
+        loadStats();
+        loadSuggestions();
+
+        // Refresh stats every 30 seconds
+        setInterval(loadStats, 30000);
+
+        // Update suggestions when user types
+        input.addEventListener('input', () => {
+            if (input.value.length > 3) {
+                loadSuggestions(input.value);
+            }
+        });
+
         // --- Event Listener for Examples Dropdown ---
         examplesDropdown.addEventListener('change', (e) => {
             if (e.target.value) {
@@ -357,6 +517,9 @@
 
                 if (response.ok) {
                     codeOutput.textContent = data.code || '// The model returned an empty script.';
+                    // Refresh learning data after successful generation
+                    loadStats();
+                    loadSuggestions();
                 } else {
                     codeOutput.parentElement.classList.add('error-message');
                     codeOutput.textContent = `שגיאה: ${data.error || 'An unknown error occurred.'}`;

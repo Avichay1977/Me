@@ -6,6 +6,7 @@ import google.generativeai as genai
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 import logging
+from learning_system import LearningSystem
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -14,6 +15,9 @@ logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
 app = Flask(__name__)
+
+# --- Learning System Initialization ---
+learning_system = LearningSystem()
 
 # --- Gemini API Configuration ---
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -152,6 +156,19 @@ def index():
     """Serves the main HTML page."""
     return render_template('index.html')
 
+@app.route('/suggestions', methods=['GET'])
+def get_suggestions():
+    """Get intelligent suggestions based on learned patterns."""
+    current_prompt = request.args.get('prompt', '')
+    suggestions = learning_system.get_suggestions(current_prompt)
+    return jsonify({'suggestions': suggestions})
+
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    """Get learning system statistics."""
+    stats = learning_system.get_stats()
+    return jsonify(stats)
+
 @app.route('/generate', methods=['POST'])
 def generate_script():
     """Handles the script generation request."""
@@ -182,6 +199,8 @@ def generate_script():
     # Check cache
     cached_code = get_cached_response(normalized_prompt)
     if cached_code:
+        # Save cached request to learning system
+        learning_system.save_request(user_prompt, cached_code, was_cached=True)
         return jsonify({'code': cached_code, 'cached': True})
 
     try:
@@ -206,6 +225,9 @@ def generate_script():
 
         # Cache the response
         cache_response(normalized_prompt, code)
+
+        # Save to learning system
+        learning_system.save_request(user_prompt, code, was_cached=False)
 
         return jsonify({'code': code, 'cached': False})
 

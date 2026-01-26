@@ -32,6 +32,10 @@ instance/
 .webassets-cache
 flask.log
 
+# Learning system database
+user_learning.db
+*.db
+
 # Environment variables
 .env
 .env.local
