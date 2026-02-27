@@ -93,6 +93,56 @@ def index():
     """Serves the main HTML page."""
     return render_template('index.html')
 
+@app.route('/chat')
+def chat_page():
+    """Serves the chat interface."""
+    return render_template('chat.html')
+
+@app.route('/chat', methods=['POST'])
+def chat():
+    """Handles chat messages with conversation history."""
+    model = get_model()
+    if model is None:
+        return jsonify({'error': 'API key not configured'}), 500
+
+    if not request.json or 'message' not in request.json:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    user_message = request.json['message']
+    history = request.json.get('history', [])
+
+    try:
+        # Build conversation for the model
+        chat_session = model.start_chat(history=[
+            {'role': msg['role'], 'parts': [msg['content']]}
+            for msg in history
+        ])
+
+        response = chat_session.send_message(user_message)
+        raw_text = response.text
+
+        # Extract code if present
+        code = None
+        response_text = raw_text
+
+        if '```javascript' in raw_text:
+            parts = raw_text.split('```javascript')
+            if len(parts) > 1:
+                code_part = parts[1].split('```')[0].strip()
+                code = code_part
+                response_text = parts[0].strip()
+                if not response_text:
+                    response_text = "הנה הסקריפט:"
+
+        return jsonify({
+            'response': response_text,
+            'code': code
+        })
+
+    except Exception as e:
+        logging.error(f"Chat error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/generate', methods=['POST'])
 def generate_script():
     """Handles the script generation request."""

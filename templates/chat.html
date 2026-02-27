@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cubase AI Studio</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #0f3460;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --text-primary: #eaeaea;
+            --text-secondary: #a0a0a0;
+            --success: #00d26a;
+            --warning: #ffc107;
+            --code-bg: #0d1117;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Header --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 5px;
+            background: rgba(255,255,255,0.1);
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .mode-tab {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .mode-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* --- Main Container --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .template-card {
+            background: var(--bg-card);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .template-card:hover {
+            transform: translateX(-5px);
+            box-shadow: 5px 0 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .template-card h4 {
+            margin-bottom: 5px;
+        }
+
+        .template-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .favorites-section {
+            margin-top: 30px;
+        }
+
+        /* --- Chat Area --- */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            margin-right: auto;
+        }
+
+        .message.assistant {
+            margin-left: auto;
+        }
+
+        .message-content {
+            padding: 15px 20px;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--accent);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-content {
+            background: var(--bg-card);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-code {
+            background: var(--code-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            direction: ltr;
+            text-align: left;
+            position: relative;
+        }
+
+        .code-actions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .code-action-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .code-action-btn.copy {
+            background: #6c757d;
+            color: white;
+        }
+
+        .code-action-btn.execute {
+            background: var(--success);
+            color: white;
+        }
+
+        .code-action-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- Input Area --- */
+        .input-area {
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 15px 20px;
+            padding-left: 50px;
+            border: 2px solid transparent;
+            border-radius: 25px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 1rem;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .voice-btn {
+            position: absolute;
+            left: 15px;
+            bottom: 13px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .voice-btn.recording {
+            background: var(--success);
+            animation: recording 1s infinite;
+        }
+
+        @keyframes recording {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 210, 106, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 210, 106, 0); }
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        /* --- Right Panel --- */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .panel-card h3 {
+            margin-bottom: 15px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* History */
+        .history-item {
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: var(--accent);
+        }
+
+        .history-item .time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .quick-action {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .quick-action .icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        /* Visualizer */
+        .visualizer {
+            height: 100px;
+            background: var(--code-bg);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            padding: 10px;
+        }
+
+        .visualizer-bar {
+            width: 8px;
+            background: linear-gradient(to top, var(--accent), var(--accent-hover));
+            border-radius: 4px;
+            transition: height 0.1s;
+        }
+
+        /* Keyboard shortcuts hint */
+        .shortcuts-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .kbd {
+            background: var(--bg-card);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin: 0 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar, .right-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">🎹</span>
+            <span>Cubase AI Studio</span>
+        </div>
+
+        <div class="mode-tabs">
+            <button class="mode-tab" onclick="location.href='/'">פקודות</button>
+            <button class="mode-tab active">צ'אט</button>
+            <button class="mode-tab" id="voiceMode">🎤 קול</button>
+        </div>
+
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span>מחובר לקיובייס</span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Sidebar - Templates -->
+        <aside class="sidebar">
+            <h3>📦 תבניות מוכנות</h3>
+
+            <div class="template-card" data-template="vocal-session">
+                <h4>🎤 סשן הקלטה ווקאלי</h4>
+                <p>4 ערוצי אודיו + Group + אפקטים</p>
+            </div>
+
+            <div class="template-card" data-template="drums">
+                <h4>🥁 תבנית תופים</h4>
+                <p>Kick, Snare, Hi-hat, Toms, OH + Bus</p>
+            </div>
+
+            <div class="template-card" data-template="mixing">
+                <h4>🎚️ תבנית מיקס</h4>
+                <p>ארגון ערוצים + צבעים + Groups</p>
+            </div>
+
+            <div class="template-card" data-template="edm">
+                <h4>🎧 EDM Production</h4>
+                <p>Synths, Drums, FX, Master chain</p>
+            </div>
+
+            <div class="favorites-section">
+                <h3>⭐ מועדפים</h3>
+                <div id="favorites-list">
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">
+                        לחץ על ⭐ כדי לשמור פקודות
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <section class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-content">
+                        <strong>שלום! 👋</strong><br><br>
+                        אני העוזר החכם שלך לקיובייס. אפשר לדבר איתי בשפה טבעית ואני אבצע פקודות ישירות בתוך Cubase.<br><br>
+                        <strong>נסה לכתוב:</strong><br>
+                        • "צור 4 ערוצי אודיו לתופים"<br>
+                        • "צבע את כל הערוצים שנבחרו בכחול"<br>
+                        • "הוסף reverb לכל ערוצי הווקאל"
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <button class="voice-btn" id="voiceBtn" title="הקלטה קולית (Space)">🎤</button>
+                    <textarea class="chat-input" id="chatInput" placeholder="כתוב פקודה או שאל שאלה..." rows="1"></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn">שלח ➤</button>
+            </div>
+        </section>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <div class="panel-card">
+                <h3>⚡ פעולות מהירות</h3>
+                <div class="quick-actions">
+                    <button class="quick-action" data-action="undo">
+                        <div class="icon">↩️</div>
+                        <div>בטל</div>
+                    </button>
+                    <button class="quick-action" data-action="redo">
+                        <div class="icon">↪️</div>
+                        <div>חזור</div>
+                    </button>
+                    <button class="quick-action" data-action="save">
+                        <div class="icon">💾</div>
+                        <div>שמור</div>
+                    </button>
+                    <button class="quick-action" data-action="play">
+                        <div class="icon">▶️</div>
+                        <div>נגן</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <h3>📊 ויזואליזציה</h3>
+                <div class="visualizer" id="visualizer">
+                    <!-- Bars generated by JS -->
+                </div>
+            </div>
+
+            <div class="panel-card" style="flex: 1; overflow-y: auto;">
+                <h3>📜 היסטוריה</h3>
+                <div id="historyList">
+                    <!-- History items added by JS -->
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <div class="shortcuts-hint">
+        <kbd>Enter</kbd> שלח • <kbd>Space</kbd> הקלטה קולית • <kbd>Ctrl+Z</kbd> בטל
+    </div>
+
+    <script>
+        // --- Elements ---
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const historyList = document.getElementById('historyList');
+        const visualizer = document.getElementById('visualizer');
+
+        // --- State ---
+        let conversationHistory = [];
+        let commandHistory = [];
+        let isRecording = false;
+        let recognition = null;
+
+        // --- Initialize Visualizer ---
+        for (let i = 0; i < 20; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'visualizer-bar';
+            bar.style.height = '10px';
+            visualizer.appendChild(bar);
+        }
+
+        function animateVisualizer() {
+            const bars = visualizer.querySelectorAll('.visualizer-bar');
+            bars.forEach(bar => {
+                const height = Math.random() * 80 + 10;
+                bar.style.height = height + 'px';
+            });
+        }
+
+        // --- Speech Recognition ---
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'he-IL';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value = transcript;
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            };
+        }
+
+        voiceBtn.addEventListener('click', () => {
+            if (!recognition) {
+                alert('הדפדפן לא תומך בהקלטה קולית');
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isRecording = true;
+                voiceBtn.classList.add('recording');
+                voiceBtn.textContent = '⏹️';
+            }
+        });
+
+        // --- Chat Functions ---
+        function addMessage(content, type, code = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+
+            let codeHtml = '';
+            if (code) {
+                codeHtml = `
+                    <div class="message-code">
+                        <div class="code-actions">
+                            <button class="code-action-btn copy" onclick="copyCode(this)">📋 העתק</button>
+                            <button class="code-action-btn execute" onclick="executeCode(this)">▶️ בצע</button>
+                        </div>
+                        <pre style="margin-top: 30px;">${escapeHtml(code)}</pre>
+                    </div>
+                `;
+            }
+
+            msgDiv.innerHTML = `
+                <div class="message-content">
+                    ${content}
+                    ${codeHtml}
+                </div>
+            `;
+
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Animate visualizer on new message
+            for (let i = 0; i < 10; i++) {
+                setTimeout(animateVisualizer, i * 100);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function copyCode(btn) {
+            const code = btn.closest('.message-code').querySelector('pre').textContent;
+            navigator.clipboard.writeText(code);
+            btn.textContent = '✓ הועתק!';
+            setTimeout(() => btn.textContent = '📋 העתק', 2000);
+        }
+
+        async function executeCode(btn) {
+            const code = btn.closest('.message-code').querySelector('pre').textContent;
+            btn.textContent = '⏳ מבצע...';
+
+            try {
+                const response = await fetch('http://127.0.0.1:5002/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                if (response.ok) {
+                    btn.textContent = '✅ בוצע!';
+                    btn.style.background = 'var(--success)';
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (err) {
+                btn.textContent = '❌ שגיאה';
+                btn.style.background = 'var(--accent)';
+            }
+
+            setTimeout(() => {
+                btn.textContent = '▶️ בצע';
+                btn.style.background = '';
+            }, 3000);
+        }
+
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            // Add to history
+            addToHistory(text);
+
+            // Get AI response
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        history: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    conversationHistory.push({ role: 'user', content: text });
+                    conversationHistory.push({ role: 'assistant', content: data.response });
+
+                    addMessage(data.response, 'assistant', data.code);
+                } else {
+                    addMessage('שגיאה: ' + data.error, 'assistant');
+                }
+            } catch (err) {
+                addMessage('שגיאת חיבור: ' + err.message, 'assistant');
+            }
+        }
+
+        function addToHistory(text) {
+            const time = new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <span>${text.substring(0, 30)}${text.length > 30 ? '...' : ''}</span>
+                <span class="time">${time}</span>
+            `;
+            historyItem.onclick = () => {
+                chatInput.value = text;
+                chatInput.focus();
+            };
+            historyList.insertBefore(historyItem, historyList.firstChild);
+
+            // Keep only last 10 items
+            while (historyList.children.length > 10) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        // --- Event Listeners ---
+        sendBtn.addEventListener('click', sendMessage);
+
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+        });
+
+        // Template cards
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const template = card.dataset.template;
+                const templates = {
+                    'vocal-session': 'צור תבנית הקלטה ווקאלית עם 4 ערוצי אודיו, ערוץ Group בשם Vocals, ו-Reverb Send',
+                    'drums': 'צור תבנית תופים עם ערוצים ל-Kick, Snare, Hi-hat, Toms, Overheads, וערוץ Drum Bus',
+                    'mixing': 'ארגן את כל הערוצים לפי קבוצות צבעים: אדום לתופים, כחול לבס, ירוק לגיטרות, צהוב לווקאל',
+                    'edm': 'צור תבנית EDM עם ערוצים ל-Synth Lead, Synth Pad, Bass, Drums, FX, ו-Master bus'
+                };
+                chatInput.value = templates[template] || '';
+                chatInput.focus();
+            });
+        });
+
+        // Quick actions
+        document.querySelectorAll('.quick-action').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.dataset.action;
+                const actions = {
+                    'undo': 'בטל את הפעולה האחרונה',
+                    'redo': 'חזור על הפעולה האחרונה',
+                    'save': 'שמור את הפרויקט',
+                    'play': 'נגן מההתחלה'
+                };
+                chatInput.value = actions[action] || '';
+                sendMessage();
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Space to toggle voice recording (when not in input)
+            if (e.code === 'Space' && document.activeElement !== chatInput) {
+                e.preventDefault();
+                voiceBtn.click();
+            }
+        });
+
+        // Idle visualizer animation
+        setInterval(() => {
+            if (!isRecording) {
+                const bars = visualizer.querySelectorAll('.visualizer-bar');
+                bars.forEach(bar => {
+                    const height = Math.random() * 20 + 5;
+                    bar.style.height = height + 'px';
+                });
+            }
+        }, 500);
+    </script>
+
+</body>
+</html>
