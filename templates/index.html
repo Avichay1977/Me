@@ -90,7 +90,7 @@
             text-align: left;
             direction: ltr;
         }
-        .error-message {
+        pre.error-message {
             color: #d9534f;
             background-color: #f2dede;
             border: 1px solid #d9534f;
@@ -143,7 +143,7 @@
         // --- Event Listener for Copy Button ---
         copyButton.addEventListener('click', () => {
             const codeToCopy = codeOutput.textContent;
-            if (codeToCopy && !codeOutput.parentElement.classList.contains('error-message')) {
+            if (codeToCopy && !codeOutput.closest('pre').classList.contains('error-message')) {
                 navigator.clipboard.writeText(codeToCopy).then(() => {
                     copyButton.textContent = 'הועתק!';
                     setTimeout(() => {
@@ -164,7 +164,7 @@
 
             submitButton.disabled = true;
             submitButton.textContent = 'מעבד...';
-            codeOutput.parentElement.classList.remove('error-message');
+            codeOutput.closest('pre').classList.remove('error-message');
             codeOutput.textContent = '...טוען';
 
             try {
@@ -179,12 +179,12 @@
                 if (response.ok) {
                     codeOutput.textContent = data.code || '// The model returned an empty script.';
                 } else {
-                    codeOutput.parentElement.classList.add('error-message');
+                    codeOutput.closest('pre').classList.add('error-message');
                     codeOutput.textContent = `שגיאה: ${data.error || 'An unknown error occurred.'}`;
                 }
 
             } catch (err) {
-                codeOutput.parentElement.classList.add('error-message');
+                codeOutput.closest('pre').classList.add('error-message');
                 codeOutput.textContent = `שגיאת רשת: ${err.message}`;
             } finally {
                 submitButton.disabled = false;

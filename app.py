@@ -78,7 +78,7 @@ def get_model():
     if not GOOGLE_API_KEY:
         return None
     try:
-        model = genai.GenerativeModel(model_name="gemini-1.0-pro",
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash",
                                       generation_config=generation_config,
                                       system_instruction=SYSTEM_PROMPT,
                                       safety_settings=safety_settings)
