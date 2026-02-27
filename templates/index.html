@@ -110,6 +110,23 @@
         .install-help li {
             margin-bottom: 8px;
         }
+        .install-option {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border-right: 3px solid #007bff;
+        }
+        .install-option:first-of-type {
+            border-right-color: #28a745;
+        }
+        .inline-code {
+            background-color: #282c34;
+            color: #98c379;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.85rem;
+        }
         .install-help .path {
             display: block;
             background-color: #282c34;
@@ -170,13 +187,23 @@
         <pre><code id="code-output">...הסקריפט שייוצר יופיע כאן</code></pre>
         <details class="install-help">
             <summary>איך להתקין בקיובייס?</summary>
-            <ol>
-                <li>הורד את הקובץ</li>
-                <li>העבר לתיקייה:
-                    <code class="path">%APPDATA%\Steinberg\Cubase\MIDI Remote\Driver Scripts\Local\</code>
-                </li>
-                <li>הפעל מחדש את Cubase</li>
-            </ol>
+            <div class="install-option">
+                <strong>🚀 אפשרות מהירה - התקנה אוטומטית:</strong>
+                <ol>
+                    <li>הרץ <code class="inline-code">python cubase_auto_installer.py</code> (פעם אחת)</li>
+                    <li>לחץ "הורד קובץ" - והסקריפט מועבר אוטומטית לקיובייס!</li>
+                </ol>
+            </div>
+            <div class="install-option">
+                <strong>📁 אפשרות ידנית:</strong>
+                <ol>
+                    <li>הורד את הקובץ</li>
+                    <li>העבר לתיקייה:
+                        <code class="path">%APPDATA%\Steinberg\Cubase\MIDI Remote\Driver Scripts\Local\</code>
+                    </li>
+                    <li>הפעל מחדש את Cubase</li>
+                </ol>
+            </div>
         </details>
     </div>
 
