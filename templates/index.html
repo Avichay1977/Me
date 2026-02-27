@@ -91,6 +91,36 @@
         #download-button:hover {
             background-color: #218838;
         }
+        .send-btn {
+            background-color: #9c27b0;
+        }
+        .send-btn:hover {
+            background-color: #7b1fa2;
+        }
+        .cubase-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        .cubase-status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .cubase-status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .cubase-status.pending {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .hidden {
+            display: none;
+        }
         .install-help {
             margin-top: 15px;
             padding: 10px;
@@ -182,7 +212,9 @@
         <div class="action-buttons">
             <button id="copy-button" class="action-btn">📋 העתק</button>
             <button id="download-button" class="action-btn">⬇️ הורד קובץ .js</button>
+            <button id="send-to-cubase" class="action-btn send-btn">🎹 שלח לקיובייס</button>
         </div>
+        <div id="cubase-status" class="cubase-status hidden"></div>
         <h2>תוצאה:</h2>
         <pre><code id="code-output">...הסקריפט שייוצר יופיע כאן</code></pre>
         <details class="install-help">
@@ -214,7 +246,10 @@
         const codeOutput = document.getElementById('code-output');
         const copyButton = document.getElementById('copy-button');
         const downloadButton = document.getElementById('download-button');
+        const sendToCubaseBtn = document.getElementById('send-to-cubase');
+        const cubaseStatus = document.getElementById('cubase-status');
         const examplesDropdown = document.getElementById('examples-dropdown');
+        const BRIDGE_URL = 'http://127.0.0.1:5002';
 
         // --- Event Listener for Examples Dropdown ---
         examplesDropdown.addEventListener('change', (e) => {
@@ -266,6 +301,51 @@
             setTimeout(() => {
                 downloadButton.textContent = '⬇️ הורד קובץ .js';
             }, 2000);
+        });
+
+        // --- Event Listener for Send to Cubase Button ---
+        sendToCubaseBtn.addEventListener('click', async () => {
+            const code = codeOutput.textContent;
+            if (!code || codeOutput.closest('pre').classList.contains('error-message') ||
+                code === '...הסקריפט שייוצר יופיע כאן' || code === '...טוען') {
+                return;
+            }
+
+            sendToCubaseBtn.disabled = true;
+            sendToCubaseBtn.textContent = '⏳ שולח...';
+            cubaseStatus.className = 'cubase-status pending';
+            cubaseStatus.textContent = '🔄 שולח לקיובייס...';
+            cubaseStatus.classList.remove('hidden');
+
+            try {
+                const response = await fetch(BRIDGE_URL + '/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    cubaseStatus.className = 'cubase-status success';
+                    cubaseStatus.textContent = '✅ נשלח בהצלחה! הסקריפט יבוצע בקיובייס.';
+                    sendToCubaseBtn.textContent = '✓ נשלח!';
+                } else {
+                    throw new Error('Bridge server error');
+                }
+            } catch (err) {
+                cubaseStatus.className = 'cubase-status error';
+                if (err.message.includes('Failed to fetch')) {
+                    cubaseStatus.textContent = '❌ שרת הגשר לא פעיל. הרץ: python cubase_bridge/bridge_server.py';
+                } else {
+                    cubaseStatus.textContent = '❌ שגיאה: ' + err.message;
+                }
+                sendToCubaseBtn.textContent = '❌ נכשל';
+            } finally {
+                setTimeout(() => {
+                    sendToCubaseBtn.disabled = false;
+                    sendToCubaseBtn.textContent = '🎹 שלח לקיובייס';
+                }, 3000);
+            }
         });
 
         // --- Event Listener for Form Submission ---
