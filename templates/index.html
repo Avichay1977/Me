@@ -62,22 +62,65 @@
             margin-top: 2rem;
             position: relative;
         }
-        #copy-button {
-            position: absolute;
-            top: 10px;
-            left: 10px; /* Adjusted for LTR content in an RTL page */
-            padding: 5px 10px;
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: flex-start;
+        }
+        .action-btn {
+            padding: 8px 16px;
             background-color: #6c757d;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9rem;
-            opacity: 0;
-            transition: opacity 0.3s;
+            transition: background-color 0.2s;
         }
-        #result-container:hover #copy-button {
-            opacity: 1;
+        .action-btn:hover {
+            background-color: #545b62;
+        }
+        .action-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #download-button {
+            background-color: #28a745;
+        }
+        #download-button:hover {
+            background-color: #218838;
+        }
+        .install-help {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .install-help summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #005f87;
+        }
+        .install-help ol {
+            margin: 10px 0 0 20px;
+            padding: 0;
+        }
+        .install-help li {
+            margin-bottom: 8px;
+        }
+        .install-help .path {
+            display: block;
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 8px;
+            border-radius: 3px;
+            margin-top: 5px;
+            font-size: 0.85rem;
+            direction: ltr;
+            text-align: left;
+            user-select: all;
         }
         pre {
             background-color: #282c34;
@@ -119,9 +162,22 @@
     </form>
 
     <div id="result-container">
-        <button id="copy-button">העתק</button>
+        <div class="action-buttons">
+            <button id="copy-button" class="action-btn">📋 העתק</button>
+            <button id="download-button" class="action-btn">⬇️ הורד קובץ .js</button>
+        </div>
         <h2>תוצאה:</h2>
         <pre><code id="code-output">...הסקריפט שייוצר יופיע כאן</code></pre>
+        <details class="install-help">
+            <summary>איך להתקין בקיובייס?</summary>
+            <ol>
+                <li>הורד את הקובץ</li>
+                <li>העבר לתיקייה:
+                    <code class="path">%APPDATA%\Steinberg\Cubase\MIDI Remote\Driver Scripts\Local\</code>
+                </li>
+                <li>הפעל מחדש את Cubase</li>
+            </ol>
+        </details>
     </div>
 
     <script>
@@ -130,6 +186,7 @@
         const submitButton = document.getElementById('submit-button');
         const codeOutput = document.getElementById('code-output');
         const copyButton = document.getElementById('copy-button');
+        const downloadButton = document.getElementById('download-button');
         const examplesDropdown = document.getElementById('examples-dropdown');
 
         // --- Event Listener for Examples Dropdown ---
@@ -145,15 +202,43 @@
             const codeToCopy = codeOutput.textContent;
             if (codeToCopy && !codeOutput.closest('pre').classList.contains('error-message')) {
                 navigator.clipboard.writeText(codeToCopy).then(() => {
-                    copyButton.textContent = 'הועתק!';
+                    copyButton.textContent = '✓ הועתק!';
                     setTimeout(() => {
-                        copyButton.textContent = 'העתק';
+                        copyButton.textContent = '📋 העתק';
                     }, 2000);
                 }).catch(err => {
                     console.error('Failed to copy text: ', err);
                     copyButton.textContent = 'שגיאה';
                 });
             }
+        });
+
+        // --- Event Listener for Download Button ---
+        downloadButton.addEventListener('click', () => {
+            const code = codeOutput.textContent;
+            if (!code || codeOutput.closest('pre').classList.contains('error-message') || code === '...הסקריפט שייוצר יופיע כאן' || code === '...טוען') {
+                return;
+            }
+
+            // Generate filename from timestamp
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '').replace('T', '_');
+            const filename = `cubase_script_${timestamp}.js`;
+
+            // Create and download file
+            const blob = new Blob([code], { type: 'application/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            downloadButton.textContent = '✓ הורד!';
+            setTimeout(() => {
+                downloadButton.textContent = '⬇️ הורד קובץ .js';
+            }, 2000);
         });
 
         // --- Event Listener for Form Submission ---
