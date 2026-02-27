@@ -93,12 +93,12 @@ def index():
     """Serves the main HTML page."""
     return render_template('index.html')
 
-@app.route('/chat')
+@app.route('/chat', methods=['GET'])
 def chat_page():
     """Serves the chat interface."""
     return render_template('chat.html')
 
-@app.route('/chat', methods=['POST'])
+@app.route('/api/chat', methods=['POST'])
 def chat():
     """Handles chat messages with conversation history."""
     model = get_model()
@@ -113,8 +113,9 @@ def chat():
 
     try:
         # Build conversation for the model
+        # Note: Gemini uses 'model' instead of 'assistant'
         chat_session = model.start_chat(history=[
-            {'role': msg['role'], 'parts': [msg['content']]}
+            {'role': 'model' if msg['role'] == 'assistant' else msg['role'], 'parts': [msg['content']]}
             for msg in history
         ])
 
