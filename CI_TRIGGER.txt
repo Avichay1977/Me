@@ -1,0 +1,1 @@
+Validate BLANK V1 native source build.
