@@ -1,0 +1,36 @@
+name: BLANK V1 Android Build
+
+on:
+  pull_request:
+    branches: [blank-v1]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Restore source archive
+        run: |
+          base64 -d BLANK-v1-source.tar.gz.b64 > /tmp/blank-v1.tar.gz
+          tar -xzf /tmp/blank-v1.tar.gz
+      - name: Build APK
+        run: gradle --no-daemon -p blank-v1 assembleDebug
+      - name: Run unit tests
+        run: gradle --no-daemon -p blank-v1 testDebugUnitTest
+      - name: Verify APK
+        run: test -f blank-v1/app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BLANK-v1-0.3.0-alpha
+          path: blank-v1/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
