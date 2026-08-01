@@ -1,0 +1,1 @@
+Validate BLANK V1 0.3.0 alpha configured build.
