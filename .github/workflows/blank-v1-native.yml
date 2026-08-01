@@ -1,13 +1,8 @@
-name: BLANK V1 Android
+name: BLANK V1 Native Android Build
 
 on:
-  push:
-    branches: [blank-v1]
-    paths:
-      - 'BLANK-v1-source.tar.gz.b64'
-      - '.github/workflows/blank-v1.yml'
   pull_request:
-    branches: [feature/cubase-script-assistant]
+    branches: [blank-v1-native]
   workflow_dispatch:
 
 jobs:
@@ -23,11 +18,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Restore source archive
-        run: |
-          base64 --decode BLANK-v1-source.tar.gz.b64 > /tmp/blank-v1.tar.gz
-          tar -xzf /tmp/blank-v1.tar.gz
-          test -f blank-v1/settings.gradle.kts
+      - name: Restore exact source ZIP
+        run: unzip -q BLANK-v1-native-source.zip
       - name: Build APK
         run: gradle --no-daemon -p blank-v1 assembleDebug
       - name: Run unit tests
@@ -36,7 +28,7 @@ jobs:
         run: test -f blank-v1/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: BLANK-v1-debug
+          name: BLANK-v1-0.3.0-alpha
           path: blank-v1/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
